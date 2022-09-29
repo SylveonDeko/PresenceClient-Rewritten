@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows.Forms;
-
 namespace PresenceClient_GUI;
 
 internal static class Program
