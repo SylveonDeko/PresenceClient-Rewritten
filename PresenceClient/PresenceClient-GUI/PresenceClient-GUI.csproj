@@ -1,40 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net48</TargetFramework>
-    <RootNamespace>PresenceClient_GUI</RootNamespace>
-    <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
-    <LangVersion>latestmajor</LangVersion>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationIcon>Assets\Icon.ico</ApplicationIcon>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="Costura.Fody" Version="5.7.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive; compile</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.1" />
-    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
-    <PackageReference Include="System.Resources.Extensions" Version="6.0.0" />
+    <PackageReference Include="Avalonia" Version="11.1.4"/>
+    <PackageReference Include="Avalonia.Desktop" Version="11.1.4"/>
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.1.4"/>
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.4"/>
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.4"/>
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.4"/>
+    <PackageReference Include="CommandLineParser" Version="2.9.1"/>
+    <PackageReference Include="DiscordRichPresence" Version="1.2.1.24"/>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0"/>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PresenceCommon\PresenceCommon.csproj" />
+    <AvaloniaResource Include="Assets\**"/>
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Resources\Connected.ico" />
-    <None Include="Resources\Disconnected.ico" />
-    <Content Include="Resources\Icon.ico" />
+    <Folder Include="Properties\"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="System.Windows.Forms">
-      <HintPath>..\..\..\..\..\..\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Windows.Forms\v4.0_4.0.0.0__b77a5c561934e089\System.Windows.Forms.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\PresenceCommon\PresenceCommon.csproj"/>
   </ItemGroup>
-
 </Project>

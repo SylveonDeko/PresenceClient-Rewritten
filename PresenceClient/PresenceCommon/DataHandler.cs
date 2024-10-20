@@ -16,6 +16,7 @@ internal static class DataHandler
         {
             handle.Free();
         }
+
         return data;
     }
 }

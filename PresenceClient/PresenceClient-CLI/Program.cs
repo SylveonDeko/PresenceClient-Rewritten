@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Timers;
+using System.Threading;
+using System.Threading.Tasks;
 using CommandLine;
 using DiscordRPC;
 using PresenceCommon;
@@ -11,29 +12,33 @@ namespace PresenceClient_CLI;
 
 internal class Program
 {
-    private static Timer _timer;
     private static Socket _client;
     private static string _lastProgramName = string.Empty;
     private static Timestamps _time;
     private static DiscordRpcClient _rpc;
     private static ConsoleOptions _arguments;
+    private static CancellationTokenSource _cts;
 
-    private static int Main(string[] args)
+    private static async Task<int> Main(string[] args)
     {
         AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-        Parser.Default.ParseArguments<ConsoleOptions>(args)
-            .WithParsed(arguments =>
-            {
-                if (!IPAddress.TryParse(arguments.Ip, out var iPAddress))
-                {
-                    Console.WriteLine("Invalid IP");
-                    Environment.Exit(1);
-                }
-                arguments.ParsedIp = iPAddress;
-                _rpc = new DiscordRpcClient(arguments.ClientId.ToString());
-                _arguments = arguments;
-            })
-            .WithNotParsed(_ => Environment.Exit(1));
+        _cts = new CancellationTokenSource();
+
+        var parseResult = Parser.Default.ParseArguments<ConsoleOptions>(args);
+        if (parseResult.Tag == ParserResultType.NotParsed)
+        {
+            return 1;
+        }
+
+        _arguments = ((Parsed<ConsoleOptions>)parseResult).Value;
+        if (!IPAddress.TryParse(_arguments.Ip, out var iPAddress))
+        {
+            Console.WriteLine("Invalid IP");
+            return 1;
+        }
+
+        _arguments.ParsedIp = iPAddress;
+        _rpc = new DiscordRpcClient(_arguments.ClientId.ToString());
 
         if (!_rpc.Initialize())
         {
@@ -43,55 +48,61 @@ internal class Program
 
         var localEndPoint = new IPEndPoint(_arguments.ParsedIp, 0xCAFE);
 
-        _timer = new Timer
+        while (!_cts.Token.IsCancellationRequested)
         {
-            Interval = 15000,
-            Enabled = false,
-        };
-        _timer.Elapsed += OnConnectTimeout;
-
-        while (true)
-        {
-            _client = new Socket(SocketType.Stream, ProtocolType.Tcp)
-            {
-                ReceiveTimeout = 5500,
-                SendTimeout = 5500
-            };
-
-            _timer.Enabled = true;
-
             try
             {
-                var result = _client.BeginConnect(localEndPoint, null, null);
-                var success = result.AsyncWaitHandle.WaitOne(2000, true);
-                if (!success)
+                using (_client = new Socket(SocketType.Stream, ProtocolType.Tcp))
                 {
-                    //UpdateStatus("Could not connect to Server! Retrying...", Color.DarkRed);
-                    _client.Close();
-                }
-                else
-                {
-                    _client.EndConnect(result);
-                    _timer.Enabled = false;
+                    _client.ReceiveTimeout = 5500;
+                    _client.SendTimeout = 5500;
 
-                    DataListen();
+                    await ConnectWithTimeoutAsync(_client, localEndPoint, TimeSpan.FromSeconds(2));
+                    await DataListenAsync();
                 }
             }
-            catch (SocketException)
+            catch (OperationCanceledException)
             {
-                _client.Close();
-                if (_rpc != null && !_rpc.IsDisposed) _rpc.ClearPresence();
+                // Cancellation was requested
+                break;
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                if (_rpc is { IsDisposed: false })
+                {
+                    _rpc.ClearPresence();
+                }
+                await Task.Delay(5000, _cts.Token);
+            }
+        }
+
+        return 0;
+    }
+
+    private static async Task ConnectWithTimeoutAsync(Socket client, EndPoint endpoint, TimeSpan timeout)
+    {
+        using var timeoutCts = new CancellationTokenSource(timeout);
+        using var combinedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, _cts.Token);
+
+        try
+        {
+            await client.ConnectAsync(endpoint, combinedCts.Token);
+            Console.WriteLine("Connected to server.");
+        }
+        catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
+        {
+            throw new TimeoutException("Connection attempt timed out.");
         }
     }
 
-    private static void DataListen()
+    private static async Task DataListenAsync()
     {
-        while (true)
+        while (!_cts.Token.IsCancellationRequested)
         {
             try
             {
-                var bytes = Utils.ReceiveExactly(_client);
+                var bytes = await Utils.ReceiveExactlyAsync(_client, cancellationToken: _cts.Token);
 
                 var title = new Title(bytes);
                 if (title.Magic == 0xffaadd23)
@@ -101,7 +112,11 @@ internal class Program
                         _time = Timestamps.Now;
                     }
 
-                    if (_rpc is not { CurrentPresence: null } && _lastProgramName == title.Name) continue;
+                    if (_rpc is not { CurrentPresence: null } && _lastProgramName == title.Name)
+                    {
+                        continue;
+                    }
+
                     if (_arguments.IgnoreHomeScreen && title.Name == "Home Menu")
                     {
                         _rpc.ClearPresence();
@@ -114,32 +129,33 @@ internal class Program
                 }
                 else
                 {
-                    if (_rpc != null && !_rpc.IsDisposed) _rpc.ClearPresence();
-                    _client.Close();
-                    return;
+                    if (_rpc is { IsDisposed: false })
+                    {
+                        _rpc.ClearPresence();
+                    }
+                    break;
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                // Cancellation was requested
+                break;
             }
             catch (SocketException)
             {
-                if (_rpc != null && !_rpc.IsDisposed) _rpc.ClearPresence();
-                _client.Close();
-                return;
+                if (_rpc is { IsDisposed: false })
+                {
+                    _rpc.ClearPresence();
+                }
+                break;
             }
         }
     }
 
-    private static void OnConnectTimeout(object sender, ElapsedEventArgs e)
-    {
-        _lastProgramName = string.Empty;
-        _time = null;
-    }
-
     private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
     {
-        if (_client != null && _client.Connected)
-            _client.Close();
-
-        if(_rpc != null && !_rpc.IsDisposed)
-            _rpc.Dispose();
+        _cts.Cancel();
+        _client?.Close();
+        _rpc?.Dispose();
     }
 }

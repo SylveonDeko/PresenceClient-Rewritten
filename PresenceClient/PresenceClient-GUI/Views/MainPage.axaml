@@ -1,0 +1,48 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PresenceClient.ViewModels"
+             x:Class="PresenceClient.Views.MainPage"
+             x:DataType="vm:MainWindowViewModel">
+    <ScrollViewer>
+        <StackPanel Spacing="15" Margin="20">
+            <!-- Connection Settings -->
+            <Border Background="#2D2D2D"
+                    CornerRadius="8" Padding="15"
+                    BoxShadow="0 2 10 0 #1A1A1A">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Connection Settings"
+                               FontWeight="SemiBold"
+                               FontSize="18"
+                               Foreground="White"
+                               HorizontalAlignment="Center" />
+
+                    <TextBox Watermark="IP or MAC Address"
+                             Text="{Binding IpAddress}" />
+
+                    <TextBox Watermark="Client ID"
+                             Text="{Binding ClientId}" />
+
+                    <Button Content="Connect"
+                            Command="{Binding ConnectCommand}"
+                            IsVisible="{Binding !IsConnected}"
+                            HorizontalAlignment="Stretch"
+                            Classes="accent" />
+
+                    <Button Content="Disconnect"
+                            Command="{Binding DisconnectCommand}"
+                            IsVisible="{Binding IsConnected}"
+                            Background="#E81123"
+                            HorizontalAlignment="Stretch"
+                            Classes="accent" />
+                </StackPanel>
+            </Border>
+
+            <!-- Status -->
+            <TextBlock Text="{Binding Status}"
+                       HorizontalAlignment="Center"
+                       FontWeight="SemiBold"
+                       Margin="0,10"
+                       Foreground="White" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

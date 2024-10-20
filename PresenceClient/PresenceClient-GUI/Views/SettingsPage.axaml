@@ -1,0 +1,59 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PresenceClient.ViewModels"
+             x:Class="PresenceClient.Views.SettingsPage"
+             x:DataType="vm:MainWindowViewModel">
+    <ScrollViewer>
+        <StackPanel Spacing="15" Margin="20">
+            <!-- Image Settings -->
+            <Border Background="#2D2D2D"
+                    CornerRadius="8" Padding="15"
+                    BoxShadow="0 2 10 0 #1A1A1A">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Image Settings"
+                               FontWeight="SemiBold"
+                               FontSize="18"
+                               Foreground="White"
+                               HorizontalAlignment="Center" />
+
+                    <TextBox Watermark="Large Image Key"
+                             Text="{Binding BigImageKey}" />
+
+                    <TextBox Watermark="Large Image Text"
+                             Text="{Binding BigImageText}" />
+
+                    <TextBox Watermark="Small Image Key"
+                             Text="{Binding SmallImageKey}" />
+
+                    <TextBox Watermark="State Text"
+                             Text="{Binding StateText}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Options -->
+            <Border Background="#2D2D2D"
+                    CornerRadius="8" Padding="15"
+                    BoxShadow="0 2 10 0 #1A1A1A">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Options"
+                               FontWeight="SemiBold"
+                               FontSize="18"
+                               Foreground="White"
+                               HorizontalAlignment="Center" />
+
+                    <CheckBox Content="Show Time Lapsed"
+                              IsChecked="{Binding ShowTimeLapsed}" />
+
+                    <CheckBox Content="Minimize to Tray"
+                              IsChecked="{Binding MinimizeToTray}" />
+
+                    <CheckBox Content="Display Home Menu as a status"
+                              IsChecked="{Binding DisplayHomeMenu}" />
+
+                    <CheckBox Content="Automatically convert IP to MAC"
+                              IsChecked="{Binding AutoConvertIpToMac}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

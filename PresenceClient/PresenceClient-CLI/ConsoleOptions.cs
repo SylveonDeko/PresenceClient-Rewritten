@@ -10,8 +10,10 @@ public class ConsoleOptions
 
     [Value(0, MetaName = "IP", Required = true, HelpText = "The IP address of your device")]
     public string Ip { get; set; }
+
     public IPAddress ParsedIp { get; set; }
 
-    [Value(1, MetaName = "Client ID", Required = true, HelpText = "The Client ID of your Discord Rich Presence application")]
+    [Value(1, MetaName = "Client ID", Required = true,
+        HelpText = "The Client ID of your Discord Rich Presence application")]
     public ulong ClientId { get; set; }
 }

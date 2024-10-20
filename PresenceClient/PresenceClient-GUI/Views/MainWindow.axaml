@@ -1,0 +1,66 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PresenceClient.ViewModels"
+        xmlns:views="using:PresenceClient.Views"
+        x:Class="PresenceClient.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/Icon.ico"
+        Title="PresenceClient"
+        Width="400" Height="600"
+        Background="#202020">
+
+    <Window.Styles>
+        <Style Selector="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Margin" Value="0 10 0 0"/>
+        </Style>
+        <Style Selector="TabControl WrapPanel">
+            <Setter Property="Background" Value="#2D2D2D"/>
+        </Style>
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="#2D2D2D"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="0 0 4 0"/>
+            <Setter Property="Padding" Value="10 0"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="PART_Border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8 8 0 0">
+                        <ContentPresenter Name="PART_ContentPresenter"
+                                          ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                          Content="{TemplateBinding Header}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="TabItem:pointerover /template/ Border#PART_Border">
+            <Setter Property="Background" Value="#3D3D3D"/>
+        </Style>
+        <Style Selector="TabItem:selected /template/ Border#PART_Border">
+            <Setter Property="Background" Value="#0078D4"/>
+        </Style>
+        <Style Selector="TabItem:selected">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*">
+        <TabControl Grid.Row="0">
+            <TabItem Header="Main">
+                <views:MainPage DataContext="{Binding}"/>
+            </TabItem>
+            <TabItem Header="Settings">
+                <views:SettingsPage DataContext="{Binding}"/>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
