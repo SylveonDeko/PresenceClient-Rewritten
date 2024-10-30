@@ -6,32 +6,57 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <ApplicationIcon>Assets\Icon.ico</ApplicationIcon>
     <PublishAot>true</PublishAot>
+    <TrimMode>full</TrimMode>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+    <ApplicationIcon>Assets\Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <DefineConstants>$(DefineConstants);OSX</DefineConstants>
+    <CFBundleName>PresenceClient</CFBundleName>
+    <CFBundleIdentifier>com.presenceclient.app</CFBundleIdentifier>
+    <CFBundleVersion>1.0.0</CFBundleVersion>
+    <CFBundleShortVersionString>1.0.0</CFBundleShortVersionString>
+    <CFBundlePackageType>APPL</CFBundlePackageType>
+    <CFBundleSignature>????</CFBundleSignature>
+    <CFBundleExecutable>PresenceClient</CFBundleExecutable>
+    <CFBundleIconFile>Icon.icns</CFBundleIconFile>
+    <NSHighResolutionCapable>true</NSHighResolutionCapable>
+    <NSRequiresAquaSystemAppearance>false</NSRequiresAquaSystemAppearance>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.1.4"/>
-    <PackageReference Include="Avalonia.Desktop" Version="11.1.4"/>
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.1.4"/>
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.4"/>
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.4"/>
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.4"/>
-    <PackageReference Include="CommandLineParser" Version="2.9.1"/>
-    <PackageReference Include="DiscordRichPresence" Version="1.2.1.24"/>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0"/>
+    <!-- Common packages -->
+    <PackageReference Include="Avalonia" Version="11.1.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.1.4" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.4" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.4" />
+    <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
+    <PackageReference Include="Avalonia.Win32" Version="11.1.4" />
+    <PackageReference Include="Avalonia.Native" Version="11.1.4" />
+    <PackageReference Include="Avalonia.X11" Version="11.1.4" />
   </ItemGroup>
 
+  <!-- Assets -->
   <ItemGroup>
-    <AvaloniaResource Include="Assets\**"/>
+    <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
-
   <ItemGroup>
-    <Folder Include="Properties\"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\PresenceCommon\PresenceCommon.csproj"/>
+    <ProjectReference Include="..\PresenceCommon\PresenceCommon.csproj" />
   </ItemGroup>
 </Project>

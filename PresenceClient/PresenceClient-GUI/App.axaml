@@ -1,23 +1,55 @@
 ﻿<Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PresenceClient.App"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
     <Application.Styles>
+        <FluentTheme />
+
+        <!-- Custom Styles -->
         <Style Selector="Button.accent">
-            <Setter Property="Background" Value="#FF6200EE"/>
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="16 8"/>
+        </Style>
+
+        <!-- Platform-specific styles -->
+        <Style Selector="Window">
+            <Style.Animations>
+                <Animation Duration="0:0:0.2" FillMode="Forward" Easing="CubicEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="0.9"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="0.9"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- macOS specific styles -->
+        <Style Selector="Window.macOS /template/ Border#PART_TransparencyFallback">
+            <Setter Property="Background" Value="#2D2D2D"/>
+        </Style>
+
+        <!-- Linux specific styles -->
+        <Style Selector="Window.linux TitleBar">
+            <Setter Property="Background" Value="#1E1E1E"/>
         </Style>
     </Application.Styles>
 
-    <Application.Styles>
-        <FluentTheme />
-    </Application.Styles>
-
     <Application.Resources>
-        <SolidColorBrush x:Key="PrimaryBackgroundColor">#FFFFFF</SolidColorBrush>
-        <SolidColorBrush x:Key="PrimaryForegroundColor">#000000</SolidColorBrush>
-        <SolidColorBrush x:Key="AccentColor">#0078D7</SolidColorBrush>
+        <Color x:Key="SystemAccentColor">#0078D4</Color>
+        <Color x:Key="SystemAccentColorDark1">#005A9E</Color>
+        <Color x:Key="SystemAccentColorDark2">#004275</Color>
+        <Color x:Key="SystemAccentColorDark3">#002642</Color>
+        <Color x:Key="SystemAccentColorLight1">#429CE3</Color>
+        <Color x:Key="SystemAccentColorLight2">#76B9ED</Color>
+        <Color x:Key="SystemAccentColorLight3">#A6D8F7</Color>
     </Application.Resources>
 </Application>

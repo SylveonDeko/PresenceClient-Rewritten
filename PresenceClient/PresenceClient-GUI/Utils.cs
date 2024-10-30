@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
-namespace PresenceClient_GUI;
+namespace PresenceClient;
 
 public static partial class Utils
 {

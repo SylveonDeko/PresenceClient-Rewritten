@@ -3,10 +3,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using PresenceClient.ViewModels;
+using PresenceClient.Platform;
 
 namespace PresenceClient.Views;
-
-public partial class MainWindow : Window, IDisposable
+public partial class MainWindow : Window
 {
     private MainWindowViewModel? viewModel;
 
@@ -16,19 +16,43 @@ public partial class MainWindow : Window, IDisposable
 #if DEBUG
         this.AttachDevTools();
 #endif
+
+        if (PlatformHelper.IsMacOS)
+        {
+            this.ExtendClientAreaToDecorationsHint = true;
+            this.ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.OSXThickTitleBar;
+        }
+
         viewModel = new MainWindowViewModel();
         DataContext = viewModel;
         viewModel.ShowMainWindowRequested += (sender, args) => ShowMainWindow();
+
+        SetupPlatformSpecifics();
     }
 
-    private void InitializeComponent()
+    private void SetupPlatformSpecifics()
     {
-        AvaloniaXamlLoader.Load(this);
+        if (PlatformHelper.IsMacOS)
+        {
+            var mainMenu = new NativeMenu();
+            var appMenu = new NativeMenu();
+            var appMenuItem = new NativeMenuItem("PresenceClient");
+            appMenuItem.Menu = appMenu;
+
+            appMenu.Add(new NativeMenuItemSeparator());
+
+            var quitItem = new NativeMenuItem("Quit PresenceClient");
+            quitItem.Click += (sender, e) => viewModel?.ExitApplication();
+            appMenu.Add(quitItem);
+
+            mainMenu.Add(appMenuItem);
+            NativeMenu.SetMenu(this, mainMenu);
+        }
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
-        if (viewModel != null && viewModel.MinimizeToTray)
+        if (viewModel is { MinimizeToTray: true } && PlatformHelper.CanUseTrayIcon())
         {
             e.Cancel = true;
             this.Hide();
@@ -36,7 +60,7 @@ public partial class MainWindow : Window, IDisposable
         else
         {
             base.OnClosing(e);
-            Dispose();
+            viewModel?.ExitApplication(); // This will properly clean up and exit
         }
     }
 
@@ -49,17 +73,13 @@ public partial class MainWindow : Window, IDisposable
 
         this.Show();
         this.Activate();
-        this.Topmost = true;
-        this.Topmost = false;
-        this.Focus();
-    }
 
-    public void Dispose()
-    {
-        if (viewModel != null)
+        if (!PlatformHelper.IsMacOS)  // macOS handles window focusing differently
         {
-            viewModel.Dispose();
-            viewModel = null;
+            this.Topmost = true;
+            this.Topmost = false;
         }
+
+        this.Focus();
     }
 }

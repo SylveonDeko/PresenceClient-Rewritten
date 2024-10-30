@@ -1,77 +1,134 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Platform;
 using System;
-using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using PresenceClient.ViewModels;
 
-namespace PresenceClient.Helpers;
-
-public class TrayIconManager : IDisposable
+namespace PresenceClient.Helpers
 {
-    private TrayIcon? trayIcon;
-    private readonly MainWindowViewModel _viewModel;
-    private NativeMenuItem connectMenuItem;
-
-    public TrayIconManager(MainWindowViewModel viewModel)
+    public class TrayIconManager : IDisposable
     {
-        _viewModel = viewModel;
-        InitializeTrayIcon();
-    }
+        private readonly MainWindowViewModel viewModel;
+        private TrayIcon? trayIcon;
+        private NativeMenuItem? connectMenuItem;
+        private bool disposed;
+        private bool isEnabled;
 
-    private void InitializeTrayIcon()
-    {
-        Dispatcher.UIThread.Post(() =>
+        public TrayIconManager(MainWindowViewModel viewModel)
         {
-            trayIcon = new TrayIcon();
+            this.viewModel = viewModel;
+        }
 
+        public void EnableTrayIcon(bool enable)
+        {
+            if (disposed || enable == isEnabled) return;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (enable)
+                {
+                    InitializeTrayIcon();
+                }
+                else
+                {
+                    DisposeTrayIcon();
+                }
+                isEnabled = enable;
+            });
+        }
+
+        private void InitializeTrayIcon()
+        {
+            if (trayIcon != null || disposed) return;
+
+            trayIcon = new TrayIcon();
             var menu = new NativeMenu();
+
             var showItem = new NativeMenuItem("Show");
-            showItem.Click += (sender, e) => _viewModel.ShowMainWindow();
+            showItem.Click += ShowItem_Click;
             menu.Add(showItem);
 
             connectMenuItem = new NativeMenuItem("Connect");
-            connectMenuItem.Click += (sender, e) => _viewModel.ToggleConnection();
+            connectMenuItem.Click += ConnectMenuItem_Click;
             menu.Add(connectMenuItem);
 
             var exitItem = new NativeMenuItem("Exit");
-            exitItem.Click += (sender, e) => _viewModel.ExitApplication();
+            exitItem.Click += ExitItem_Click;
             menu.Add(exitItem);
 
             trayIcon.Menu = menu;
             trayIcon.Clicked += TrayIcon_Clicked;
 
-            UpdateIcon(false); // Start with disconnected icon
+            UpdateIcon(false);
             trayIcon.IsVisible = true;
-        });
-    }
+        }
 
-    private void TrayIcon_Clicked(object? sender, EventArgs e)
-    {
-        _viewModel.ShowMainWindow();
-    }
+        private void ShowItem_Click(object? sender, EventArgs e)
+        {
+            viewModel.ShowMainWindow();
+        }
 
-    public void UpdateIcon(bool isConnected)
-    {
-        Dispatcher.UIThread.Post(() =>
+        private void ConnectMenuItem_Click(object? sender, EventArgs e)
+        {
+            viewModel.ToggleConnection();
+        }
+
+        private void ExitItem_Click(object? sender, EventArgs e)
+        {
+            viewModel.ExitApplication();
+        }
+
+        private void TrayIcon_Clicked(object? sender, EventArgs e)
+        {
+            viewModel.ShowMainWindow();
+        }
+
+        public void UpdateIcon(bool isConnected)
+        {
+            if (disposed) return;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (trayIcon == null || connectMenuItem == null) return;
+
+                var iconName = isConnected ? "Connected.ico" : "Disconnected.ico";
+                using var assets = AssetLoader.Open(new Uri($"avares://PresenceClient-GUI/Assets/{iconName}"));
+
+                trayIcon.Icon = new WindowIcon(assets);
+                trayIcon.ToolTipText = $"PresenceClient ({(isConnected ? "Connected" : "Disconnected")})";
+                connectMenuItem.Header = isConnected ? "Disconnect" : "Connect";
+            });
+        }
+
+        private void DisposeTrayIcon()
         {
             if (trayIcon == null) return;
-            var iconName = isConnected ? "Connected.ico" : "Disconnected.ico";
-            var assets = AssetLoader.Open(new Uri($"avares://PresenceClient-GUI/Assets/{iconName}"));
 
-            trayIcon.Icon = new WindowIcon(assets);
-            trayIcon.ToolTipText = $"PresenceClient ({(isConnected ? "Connected" : "Disconnected")})";
+            trayIcon.IsVisible = false;
+            trayIcon.Clicked -= TrayIcon_Clicked;
 
-            connectMenuItem.Header = isConnected ? "Disconnect" : "Connect";
-        });
-    }
+            if (trayIcon.Menu != null)
+            {
+                foreach (var item in trayIcon.Menu.Items)
+                {
+                    if (item is not NativeMenuItem menuItem) continue;
+                    menuItem.Click -= ShowItem_Click;
+                    menuItem.Click -= ConnectMenuItem_Click;
+                    menuItem.Click -= ExitItem_Click;
+                }
+            }
 
-    public void Dispose()
-    {
-        Dispatcher.UIThread.Post(() =>
+            trayIcon.Dispose();
+            trayIcon = null;
+            connectMenuItem = null;
+        }
+
+        public void Dispose()
         {
-            trayIcon?.Dispose();
-        });
+            if (disposed) return;
+
+            Dispatcher.UIThread.Post(DisposeTrayIcon);
+            disposed = true;
+        }
     }
 }
